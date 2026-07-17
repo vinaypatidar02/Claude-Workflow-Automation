@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Automation Workflow — Vinay Patidar</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#363C49;padding:20px}
+.wrap{max-width:820px;margin:0 auto}
+:root{--teal:#0074A6;--teal-d:#006996;--dk:#363C49;--gr:#8C8C8C;--lbg:#f0f7fb;--border:#e2e8f0;--bg2:#f1f5f9;--bg1:#ffffff}
+.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:8px;padding:4px;margin-bottom:16px}
+.tab{flex:1;padding:8px 4px;border:none;border-radius:6px;cursor:pointer;font-size:13px;background:transparent;color:var(--gr);font-family:inherit}
+.tab.on{background:var(--bg1);color:var(--teal);font-weight:500;border:1px solid var(--border)}
+.pane{display:none}.pane.on{display:block}
+.hdr{background:var(--teal);border-radius:12px;padding:18px 20px;margin-bottom:16px;color:#fff}
+.hdr .sub{font-size:11px;opacity:.8;letter-spacing:.5px;margin-bottom:4px}
+.hdr .ttl{font-size:20px;font-weight:600;margin-bottom:2px}
+.hdr .desc{font-size:12px;opacity:.85}
+.step{border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.step.open{border-color:var(--teal);box-shadow:0 0 0 3px #0074A618}
+.step-hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;background:var(--bg1);user-select:none}
+.step.open .step-hdr{background:var(--lbg)}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--bg2);color:var(--gr);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0}
+.step.open .step-num{background:var(--teal);color:#fff}
+.step-info{flex:1}
+.step-title{font-weight:600;font-size:14px;color:var(--dk)}
+.step-sub{font-size:11px;color:var(--gr);margin-top:2px}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:4px;margin-left:6px;letter-spacing:.2px}
+.b-auto{background:#dcfce7;color:#166534}
+.b-man{background:#fef3c7;color:#92400e}
+.b-semi{background:#dbeafe;color:#1e40af}
+.b-first{background:#f3e8ff;color:#6b21a8}
+.tog{color:var(--teal);font-size:18px;font-weight:300;line-height:1}
+.body{padding:0 16px 16px}
+.lead{background:var(--lbg);border-left:3px solid var(--teal);border-radius:0 4px 4px 0;padding:7px 11px;margin:11px 0 10px;font-size:11px;color:#475569}
+.lead strong{color:var(--teal)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.col-box{border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.col-hdr{padding:7px 10px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.col-hdr.term{background:#1e293b;color:#7dd3fc}
+.col-hdr.desk{background:#0f172a;color:#86efac}
+.col-body{padding:8px 10px;background:var(--bg1)}
+code{display:block;background:#1e293b;color:#7dd3fc;border-radius:5px;padding:5px 9px;font-size:11.5px;font-family:monospace;margin:3px 0;line-height:1.65;white-space:pre-wrap}
+.prompt{display:block;background:#0f172a;color:#86efac;border-radius:5px;padding:5px 9px;font-size:11.5px;font-family:monospace;margin:3px 0;line-height:1.65}
+.prompt::before{content:"› ";opacity:.6}
+.note-sm{font-size:10.5px;color:var(--gr);margin-top:5px;line-height:1.5}
+.arr{display:flex;gap:8px;margin:3px 0;font-size:12px;color:var(--dk);align-items:flex-start}
+.arr::before{content:"→";color:var(--teal);flex-shrink:0}
+.warn{background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;padding:9px 12px;font-size:12px;color:#7f1d1d;margin-top:10px}
+.tip{background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:9px 12px;font-size:12px;color:#14532d;margin-top:10px}
+.note{background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:9px 12px;font-size:12px;color:#713f12;margin-top:10px}
+.row{display:flex;gap:8px;margin:4px 0;align-items:flex-start;font-size:12px}
+.lbl{font-size:11px;color:var(--gr);min-width:115px;padding-top:1px;flex-shrink:0}
+.sep{font-size:11px;font-weight:600;color:var(--teal);margin:12px 0 6px;letter-spacing:.3px;text-transform:uppercase}
+.also{font-size:10.5px;color:var(--gr);margin:3px 0 0 0}
+table.sh{width:100%;font-size:12px;border-collapse:collapse}
+table.sh th{background:var(--teal);color:#fff;padding:7px 10px;text-align:left;font-weight:600;font-size:11px}
+table.sh td{padding:7px 10px;border-top:1px solid #f1f5f9;color:var(--dk);vertical-align:top}
+table.sh tr:nth-child(even) td{background:var(--bg2)}
+.edit-col{color:#166534;font-weight:600;font-size:11px}
+.ro-col{color:var(--gr);font-size:11px}
+.qrow{margin-bottom:10px}
+.qlabel{font-size:12px;color:var(--dk);font-weight:500;margin-bottom:3px}
+.cost-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.cost-card{background:var(--bg2);border-radius:8px;padding:10px 12px}
+.cost-label{font-size:11px;color:var(--gr);margin-bottom:4px}
+.cost-val{font-size:18px;font-weight:600;color:var(--dk)}
+.cost-note{font-size:11px;color:var(--gr);margin-top:2px}
+.rhythm-row{display:flex;gap:10px;margin:5px 0;font-size:12px;align-items:flex-start}
+.rhythm-when{color:var(--teal);font-weight:600;min-width:170px;flex-shrink:0;font-size:11px}
+.legend{display:flex;gap:16px;margin-bottom:12px;font-size:11px;align-items:center}
+.leg-swatch{display:inline-block;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:10px;margin-right:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr">
+  <div class="sub">VINAY PATIDAR · UK ANALYTICS JOB SEARCH</div>
+  <div class="ttl">Job Automation Workflow</div>
+  <div class="desc">Claude Code reference · all 5 stages complete · Terminal &amp; Desktop App guidance per step</div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="show('workflow',this)">📋 Workflow</button>
+  <button class="tab" onclick="show('sheet',this)">📊 Sheet columns</button>
+  <button class="tab" onclick="show('quick',this)">⚡ Quick reference</button>
+  <button class="tab" onclick="show('cost',this)">💰 Costs</button>
+</div>
+
+<!-- WORKFLOW -->
+<div id="workflow" class="pane on">
+<div class="legend">
+  <span><span class="leg-swatch" style="background:#1e293b;color:#7dd3fc">terminal</span> = type in macOS Terminal with Claude Code running</span>
+  <span><span class="leg-swatch" style="background:#0f172a;color:#86efac">› desktop</span> = type in Claude Code Desktop chat</span>
+</div>
+
+<!-- Step 0 -->
+<div id="s0" class="step open" onclick="tog(0)">
+  <div class="step-hdr"><div class="step-num">0</div><div class="step-info"><div class="step-title">Start a session<span class="badge b-first">Always first</span></div><div class="step-sub">Every time you open the project</div></div><div class="tog" id="tog0">−</div></div>
+  <div class="body" id="b0">
+    <div class="lead"><strong>Leads to:</strong> Claude reads CLAUDE.md automatically — knows your full profile, 52+ applications, and pipeline state</div>
+    <div class="two-col">
+      <div class="col-box">
+        <div class="col-hdr term">🖥 Terminal (Claude Code CLI)</div>
+        <div class="col-body">
+          <code>cd ~/Projects/job-automation
+source .venv/bin/activate
+claude</code>
+          <div class="note-sm">Then type your first prompt inside the claude session</div>
+        </div>
+      </div>
+      <div class="col-box">
+        <div class="col-hdr desk">💬 Desktop App</div>
+        <div class="col-body">
+          <div style="font-size:11px;color:var(--gr);margin-bottom:5px">File → Open Folder → select job-automation<br>Then type in the chat:</div>
+          <div class="prompt">Read CLAUDE.md and confirm all 5 stages are complete and tell me how many applications are in the tracker</div>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:10px">Both interfaces read CLAUDE.md automatically when you open the project folder. Keep the venv active for the full session in terminal mode.</div>
+  </div>
+</div>
+
+<!-- Step 1 -->
+<div id="s1" class="step" onclick="tog(1)">
+  <div class="step-hdr"><div class="step-num">1</div><div class="step-info"><div class="step-title">Discover new jobs<span class="badge b-auto">Automated</span></div><div class="step-sub">2–3× per week · --age 1 for daily runs (cheapest)</div></div><div class="tog" id="tog1">+</div></div>
+  <div class="body" id="b1" style="display:none">
+    <div class="lead"><strong>Leads to:</strong> New shortlisted jobs written to tracker and Google Sheet · cost estimate shown before any Apify call</div>
+    <div class="two-col">
+      <div class="col-box">
+        <div class="col-hdr term">🖥 Terminal</div>
+        <div class="col-body">
+          <code>python3 scripts/run_scout.py --age 1</code>
+          <code>python3 scripts/run_scout.py --age 7</code>
+          <code>python3 scripts/run_scout.py --age 7 --expanded</code>
+          <div class="note-sm">run_scout.py shows cost estimate and asks Y/n before calling Apify. --expanded uses 10 searches instead of 5.</div>
+        </div>
+      </div>
+      <div class="col-box">
+        <div class="col-hdr desk">💬 Desktop App</div>
+        <div class="col-body">
+          <div class="prompt">run scout --age 1</div>
+          <div class="prompt">run scout --age 7</div>
+          <div class="prompt">run scout --age 7 --expanded</div>
+          <div class="note-sm">Claude Code reads job_scout.md and calls run_scout.py with the flags you pass. Same confirmation prompt will appear.</div>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:10px"><strong>LinkedIn date filter buckets (no arbitrary days):</strong> --age 1 → past-24-hours · --age 2–7 → past-week · --age 8–30 → past-month. For 2–3 day coverage: run --age 1 daily — cache prevents double-charging.</div>
+    <div class="sep">What happens automatically</div>
+    <div class="arr">Cache checked first — same-day re-run costs $0.00</div>
+    <div class="arr">Apify scrapes LinkedIn (5 default or 10 expanded searches, max 25 each)</div>
+    <div class="arr">enrich_jobs.py extracts salary, work mode, experience · sorted newest first</div>
+    <div class="arr">score_job skill scores each JD 0–100 against your profile</div>
+    <div class="arr">3-signal duplicate check against all 52+ existing entries</div>
+    <div class="arr">Shortlisted (≥75) added · Review Needed (60–74) flagged · &lt;60 rejected</div>
+    <div class="arr">Google Sheet updated automatically</div>
+  </div>
+</div>
+
+<!-- Step 2 -->
+<div id="s2" class="step" onclick="tog(2)">
+  <div class="step-hdr"><div class="step-num">2</div><div class="step-info"><div class="step-title">Review shortlisted jobs<span class="badge b-man">Manual · ~5 min</span></div><div class="step-sub">Open Google Sheet after every scout run</div></div><div class="tog" id="tog2">+</div></div>
+  <div class="body" id="b2" style="display:none">
+    <div class="lead"><strong>Leads to:</strong> Jobs marked Approved with career_page_url set → triggers prep automatically</div>
+    <div style="font-size:12px;color:var(--dk);margin:10px 0 6px">This step happens entirely in Google Sheet — same action whether you use terminal or desktop:</div>
+    <div class="row"><span class="lbl">Col H — Fit Score</span><span>Focus on ≥ 75. 60–74 = Review Needed</span></div>
+    <div class="row"><span class="lbl">Col I — Salary</span><span>Upper range &gt; £85k qualifies even if lower end is below</span></div>
+    <div class="row"><span class="lbl">Col J — Work Mode</span><span>Remote / Hybrid (Xd/week) / On-site</span></div>
+    <div class="row"><span class="lbl">Col K — JD link</span><span>Click "View JD" to open LinkedIn posting</span></div>
+    <div class="warn"><strong>Critical edit order — do NOT reverse:</strong><br><br>
+    1. Open LinkedIn URL → click Apply → copy the ATS redirect URL<br>
+    2. Paste URL into <strong>Col M (career_page_url)</strong> — dropdown available<br>
+    3. Then set <strong>Col L (status)</strong> to <strong>Approved</strong> via dropdown<br><br>
+    For Easy Apply jobs: type <strong>EASY_APPLY</strong> in Col M instead of a URL</div>
+    <div class="two-col" style="margin-top:10px">
+      <div class="col-box">
+        <div class="col-hdr term">🖥 Terminal — after editing Sheet</div>
+        <div class="col-body">
+          <code>python3 scripts/sheets_sync.py pull</code>
+          <div class="note-sm">Pull your edits back to job_tracker.json. PostToolUse hook then alerts if approved jobs are ready for prep.</div>
+        </div>
+      </div>
+      <div class="col-box">
+        <div class="col-hdr desk">💬 Desktop App — after editing Sheet</div>
+        <div class="col-body">
+          <div class="prompt">pull from google sheet and check for approved jobs</div>
+          <div class="note-sm">Claude Code runs sheets_sync pull and checks the hook condition automatically.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3 -->
+<div id="s3" class="step" onclick="tog(3)">
+  <div class="step-hdr"><div class="step-num">3</div><div class="step-info"><div class="step-title">Prepare applications<span class="badge b-semi">Semi-automated</span></div><div class="step-sub">Fires after pull, or trigger manually</div></div><div class="tog" id="tog3">+</div></div>
+  <div class="body" id="b3" style="display:none">
+    <div class="lead"><strong>Leads to:</strong> Tailored resume PDF + cover letter PDF saved · Tracker → Prep Complete · Sheet synced</div>
+    <div class="two-col">
+      <div class="col-box">
+        <div class="col-hdr term">🖥 Terminal</div>
+        <div class="col-body">
+          <div class="note-sm" style="margin-bottom:5px">After sheets_sync pull, Claude Code detects approved jobs and asks to run prep. Or trigger manually:</div>
+          <div class="prompt">Check for approved jobs and run application prep</div>
+          <div class="note-sm">Type this as a prompt inside the claude session in terminal.</div>
+        </div>
+      </div>
+      <div class="col-box">
+        <div class="col-hdr desk">💬 Desktop App</div>
+        <div class="col-body">
+          <div class="prompt">Check for approved jobs and run application prep</div>
+          <div class="prompt">prepare applications for approved jobs</div>
+          <div class="note-sm">Claude Code reads application_prep.md and processes each qualifying entry — asks you to confirm per job before generating PDFs.</div>
+        </div>
+      </div>
+    </div>
+    <div class="sep">What happens per job</div>
+    <div class="arr">Fetches JD text · selects resume variant (product / customer / master)</div>
+    <div class="arr">tailor_resume skill rewrites bullets to match JD keywords — zero fabrication</div>
+    <div class="arr">pdf_renderer.py renders resume PDF in your exact teal sidebar format</div>
+    <div class="arr">draft_cover_letter skill writes 4-paragraph letter · rendered as PDF</div>
+    <div class="arr">Easy Apply jobs: full resume + cover letter still generated, flagged in meta.json</div>
+    <div class="arr">Tracker → Prep Complete · Sheet synced</div>
+    <div class="tip"><strong>Zero marginal cost:</strong> Tailoring runs via your Claude subscription inside Claude Code — no API charges.</div>
+    <div class="sep">Output location</div>
+    <code>outputs/applications/[Company]_[Role]_[Date]/
+  [Company]_[Role]_[Date].pdf       ← resume
+  [Company]_CoverLetter_[Date].pdf  ← cover letter
+  meta.json</code>
+  </div>
+</div>
+
+<!-- Step 4 -->
+<div id="s4" class="step" onclick="tog(4)">
+  <div class="step-hdr"><div class="step-num">4</div><div class="step-info"><div class="step-title">Submit applications<span class="badge b-man">Manual · ~10 min each</span></div><div class="step-sub">Open career_page_url for each Prep Complete job</div></div><div class="tog" id="tog4">+</div></div>
+  <div class="body" id="b4" style="display:none">
+    <div class="lead"><strong>Leads to:</strong> Application submitted → confirmation email triggers automatic status update in tracker and Sheet</div>
+    <div class="two-col">
+      <div class="col-box">
+        <div class="col-hdr term">🖥 Terminal + Browser</div>
+        <div class="col-body">
+          <div class="note-sm" style="margin-bottom:6px">Open the career page from your Sheet (Col M) in Chrome. Review the PDF from outputs/applications/. Fill and submit the ATS form.</div>
+          <div class="note-sm">For Easy Apply: open jd_url (Col K) → click LinkedIn Easy Apply → use generated resume PDF as reference.</div>
+        </div>
+      </div>
+      <div class="col-box">
+        <div class="col-hdr desk">💬 Desktop App + Browser</div>
+        <div class="col-body">
+          <div class="prompt">show me all prep complete jobs with their career page URLs</div>
+          <div class="note-sm" style="margin-top:6px">Claude lists them from the tracker. Open each URL, submit the form. If you have Claude in Chrome extension, it can assist with filling ATS form fields.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Step 5 -->
+<div id="s5" class="step" onclick="tog(5)">
+  <div class="step-hdr"><div class="step-num">5</div><div class="step-info"><div class="step-title">Track application status<span class="badge b-auto">Automated</span></div><div class="step-sub">Every 2 hours or on demand · first time: run backfill once</div></div><div class="tog" id="tog5">+</div></div>
+  <div class="body" id="b5" style="display:none">
+    <div class="lead"><strong>Leads to:</strong> Status auto-updates in Sheet: Applied → Under Review → Interview Scheduled → Offer / Rejected</div>
+    <div class="two-col">
+      <div class="col-box">
+        <div class="col-hdr term">🖥 Terminal — first time backfill</div>
+        <div class="col-body">
+          <div class="prompt">check email backfill</div>
+          <div class="prompt">check email last 30 days</div>
+          <div class="note-sm">Reads inbox only — Trash/Spam excluded automatically. You control the window. ~$0.06 for ~60 emails.</div>
+        </div>
+      </div>
+      <div class="col-box">
+        <div class="col-hdr desk">💬 Desktop App — first time backfill</div>
+        <div class="col-body">
+          <div class="prompt">check email backfill</div>
+          <div class="prompt">check email last 45 days</div>
+          <div class="note-sm">Same prompts work in desktop — Claude Code runs the Gmail hook, classifies emails with Haiku 4.5, updates tracker and Sheet.</div>
+        </div>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:10px">
+      <div class="col-box">
+        <div class="col-hdr term">🖥 Terminal — ongoing</div>
+        <div class="col-body">
+          <div class="prompt">check email</div>
+          <div class="note-sm" style="margin-top:4px">Or set up cron for automatic 2-hour polling:</div>
+          <code style="font-size:10px">0 */2 * * * cd ~/Projects/job-automation && source .venv/bin/activate && claude "check email" >> logs/email_hook.log 2>&1</code>
+        </div>
+      </div>
+      <div class="col-box">
+        <div class="col-hdr desk">💬 Desktop App — ongoing</div>
+        <div class="col-body">
+          <div class="prompt">check email</div>
+          <div class="prompt">any updates on my applications?</div>
+          <div class="note-sm">Claude Code runs the full email pipeline and shows you a summary of what changed.</div>
+        </div>
+      </div>
+    </div>
+    <div class="sep">What happens automatically</div>
+    <div class="arr">Gmail MCP fetches unprocessed emails (last 48h, inbox only)</div>
+    <div class="arr">Haiku 4.5 classifies intent — handles any recruiter phrasing</div>
+    <div class="arr">Company alias map handles JPMC vs JPMorgan Chase etc.</div>
+    <div class="arr">Fuzzy matches to application by company + role · status upgrades only</div>
+    <div class="arr">Email labelled job-processed · Sheet synced</div>
+  </div>
+</div>
+
+<div style="background:var(--lbg);border:1px solid #b3d9ed;border-radius:10px;padding:14px 16px;margin-top:4px">
+  <div style="font-weight:600;color:var(--teal);margin-bottom:10px;font-size:13px">📅 Recommended weekly rhythm</div>
+  <div class="rhythm-row"><span class="rhythm-when">Daily (Mon–Fri)</span><span>python3 scripts/run_scout.py --age 1 (terminal) or "run scout --age 1" (desktop)</span></div>
+  <div class="rhythm-row"><span class="rhythm-when">Mon / Wed / Fri morning</span><span>Review Sheet → pull → prep fires → submit applications</span></div>
+  <div class="rhythm-row"><span class="rhythm-when">Every 2h (auto cron)</span><span>Email tracker polls and updates statuses</span></div>
+  <div class="rhythm-row"><span class="rhythm-when">After 7+ day break</span><span>python3 scripts/run_scout.py --age 7 --expanded</span></div>
+</div>
+</div>
+
+<!-- SHEET COLUMNS -->
+<div id="sheet" class="pane">
+  <div style="font-size:11px;color:var(--gr);margin-bottom:10px">Only cols L, M, O need your input. Cols L and M have dropdowns applied automatically each time sheets_sync push runs.</div>
+  <div class="warn" style="margin-bottom:12px"><strong>Edit order is critical:</strong> Fill Col M (career_page_url) FIRST, then set Col L (status) to Approved. Reversing this causes prep to fire without a destination URL.</div>
+  <table class="sh">
+    <tr><th>Col</th><th>Field</th><th>Description</th><th>Edit?</th></tr>
+    <tr><td>A</td><td>id</td><td>Internal workflow ID (app_001 etc.)</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>B</td><td>reference</td><td>Company — Role (share with referral contacts)</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>C</td><td>job_id</td><td>LinkedIn job ID from scrape</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>D</td><td>company</td><td>Company name</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>E</td><td>role</td><td>Role title</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>F</td><td>location</td><td>Job location</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>G</td><td>posted_date</td><td>When posted — sorted newest first</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>H</td><td>fit_score</td><td>0–100 match score. Focus on ≥ 75</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>I</td><td>salary_stated</td><td>Salary / range from posting or description</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>J</td><td>work_mode</td><td>Remote / Hybrid (Xd/week) / On-site</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>K</td><td>experience_req</td><td>Years of experience required</td><td class="ro-col">Read-only</td></tr>
+    <tr><td style="color:var(--teal);font-weight:600">L</td><td>status</td><td>Pipeline status — strict dropdown (10 values)</td><td class="edit-col">✏ Set AFTER filling Col M</td></tr>
+    <tr><td style="color:var(--teal);font-weight:600">M</td><td>career_page_url</td><td>ATS apply link — fill this FIRST</td><td class="edit-col">✏ Paste URL or type EASY_APPLY</td></tr>
+    <tr><td>N</td><td>applied_date</td><td>Date application submitted</td><td class="ro-col">Read-only</td></tr>
+    <tr><td style="color:var(--teal);font-weight:600">O</td><td>notes</td><td>Your notes / referral contact name</td><td class="edit-col">✏ Free text</td></tr>
+    <tr><td>P</td><td>visa_sponsorship</td><td>Sponsorship status from JD</td><td class="ro-col">Read-only</td></tr>
+    <tr><td>Q</td><td>ats_type</td><td>ATS platform detected (greenhouse / lever / workday…)</td><td class="ro-col">Read-only</td></tr>
+  </table>
+  <div style="margin-top:10px;font-size:11px;color:var(--gr)">
+    <strong style="color:var(--teal)">Col L dropdown:</strong> Shortlisted · Approved · Prep Complete · Applied · Under Review · Interview Scheduled · Assessment · Offer Received · Rejected · Withdrawn
+  </div>
+</div>
+
+<!-- QUICK REFERENCE -->
+<div id="quick" class="pane">
+  <div class="legend">
+    <span><span class="leg-swatch" style="background:#1e293b;color:#7dd3fc">terminal</span> = run directly in shell</span>
+    <span><span class="leg-swatch" style="background:#0f172a;color:#86efac">› desktop</span> = type in Desktop App chat</span>
+  </div>
+
+  <div class="sep">Session start</div>
+  <div class="qrow">
+    <div class="qlabel">Start Claude Code (terminal only)</div>
+    <code>cd ~/Projects/job-automation && source .venv/bin/activate && claude</code>
+  </div>
+  <div class="qrow">
+    <div class="qlabel">Verify state — both</div>
+    <div class="prompt">Read CLAUDE.md and confirm all 5 stages are complete and tell me how many applications are in the tracker</div>
+  </div>
+
+  <div class="sep">Job scraping</div>
+  <div class="qrow"><div class="qlabel">Scout today only</div><code>python3 scripts/run_scout.py --age 1</code><div class="prompt">run scout --age 1</div></div>
+  <div class="qrow"><div class="qlabel">Scout last week</div><code>python3 scripts/run_scout.py --age 7</code><div class="prompt">run scout --age 7</div></div>
+  <div class="qrow"><div class="qlabel">Scout expanded (10 searches)</div><code>python3 scripts/run_scout.py --age 7 --expanded</code><div class="prompt">run scout --age 7 --expanded</div></div>
+  <div class="qrow"><div class="qlabel">Cache status</div><code>python3 scripts/apify_cache.py status</code></div>
+  <div class="qrow"><div class="qlabel">Clear stale cache</div><code>python3 scripts/apify_cache.py clear --old</code></div>
+  <div class="qrow"><div class="qlabel">Test scrape (3 jobs)</div><code>python3 scripts/test_apify_scrape.py --age 1</code></div>
+
+  <div class="sep">Google Sheet sync</div>
+  <div class="qrow"><div class="qlabel">Push to Sheet</div><code>python3 scripts/sheets_sync.py push</code><div class="prompt">push tracker to google sheet</div></div>
+  <div class="qrow"><div class="qlabel">Pull from Sheet</div><code>python3 scripts/sheets_sync.py pull</code><div class="prompt">pull from google sheet and check for approved jobs</div></div>
+
+  <div class="sep">Email tracking</div>
+  <div class="qrow"><div class="qlabel">Backfill — both</div><div class="prompt">check email backfill</div></div>
+  <div class="qrow"><div class="qlabel">Custom window — both</div><div class="prompt">check email last 45 days</div></div>
+  <div class="qrow"><div class="qlabel">Normal check — both</div><div class="prompt">check email</div></div>
+  <div class="qrow"><div class="qlabel">Test tracker (no Gmail)</div><code>python3 scripts/test_email_tracker.py</code></div>
+  <div class="qrow"><div class="qlabel">View active apps</div><code>python3 scripts/test_email_tracker.py --dry</code></div>
+
+  <div class="sep">Application prep</div>
+  <div class="qrow"><div class="qlabel">Run prep — both</div><div class="prompt">Check for approved jobs and run application prep</div></div>
+  <div class="qrow"><div class="qlabel">Test PDF render</div><code>python3 scripts/pdf_renderer.py test</code></div>
+
+  <div class="sep">Diagnostics</div>
+  <div class="qrow"><div class="qlabel">Full setup check</div><code>./scripts/setup_stage2.sh</code></div>
+</div>
+
+<!-- COSTS -->
+<div id="cost" class="pane">
+  <div style="font-size:11px;color:var(--gr);margin-bottom:12px">All costs in USD. Resume tailoring and cover letter generation are free — they run inside Claude Code via your subscription.</div>
+  <div class="cost-grid">
+    <div class="cost-card"><div class="cost-label">Apify — --age 1, 5 searches (daily)</div><div class="cost-val">~$0.08 max</div><div class="cost-note">Recommended for everyday runs</div></div>
+    <div class="cost-card"><div class="cost-label">Apify — --age 7, 5 searches</div><div class="cost-val">~$0.38 max</div><div class="cost-note">Use after weekends or breaks</div></div>
+    <div class="cost-card"><div class="cost-label">Apify — --age 7, --expanded (10)</div><div class="cost-val">~$0.75 max</div><div class="cost-note">Wider net — more duplicates filtered</div></div>
+    <div class="cost-card"><div class="cost-label">Same-day re-run (cached)</div><div class="cost-val">$0.00</div><div class="cost-note">Served from disk — no Apify call</div></div>
+    <div class="cost-card"><div class="cost-label">Email backfill (once, ~60 emails)</div><div class="cost-val">~$0.06</div><div class="cost-note">Haiku 4.5 · $0.001 per email</div></div>
+    <div class="cost-card"><div class="cost-label">Resume + cover letter prep</div><div class="cost-val">$0.00</div><div class="cost-note">Claude Code subscription — free</div></div>
+  </div>
+  <div style="margin-top:14px;background:var(--lbg);border:1px solid #b3d9ed;border-radius:8px;padding:12px 14px">
+    <div style="font-weight:600;color:var(--teal);margin-bottom:8px;font-size:13px">Cost optimisation tips</div>
+    <div class="arr">run_scout.py shows exact cost estimate and asks Y/n before every Apify call</div>
+    <div class="arr">--age 1 daily = cheapest — only brand new postings</div>
+    <div class="arr">maxJobs=25 is a ceiling — if LinkedIn has 8 results, you pay for 8 not 25</div>
+    <div class="arr">Cache means running scout twice same day = $0.00 second run</div>
+    <div class="arr">$5 Apify free credit ≈ 60 daily --age 1 runs or 13 weekly --age 7 runs</div>
+  </div>
+  <div style="margin-top:10px;font-size:12px;color:var(--gr);padding:10px 0;border-top:1px solid var(--border)">
+    Typical monthly total (daily --age 1 scout + email polling): <strong style="color:var(--dk)">~$2.50–$4.00</strong>
+  </div>
+</div>
+
+<div style="text-align:center;font-size:11px;color:var(--gr);margin-top:20px;padding:10px 0;border-top:1px solid var(--border)">
+  job-automation · 5 stages complete · Claude Code Terminal &amp; Desktop · Apify · Gmail · Google Sheets
+</div>
+
+</div>
+<script>
+function tog(i){
+  var b=document.getElementById('b'+i),t=document.getElementById('tog'+i),s=document.getElementById('s'+i);
+  var vis=b.style.display!=='none';
+  b.style.display=vis?'none':'block';
+  t.textContent=vis?'+':'−';
+  vis?s.classList.remove('open'):s.classList.add('open');
+}
+function show(id,btn){
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on')});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on')});
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+[1,2,3,4,5].forEach(function(i){
+  var b=document.getElementById('b'+i);
+  if(b)b.style.display='none';
+});
+</script>
+</body>
+</html>

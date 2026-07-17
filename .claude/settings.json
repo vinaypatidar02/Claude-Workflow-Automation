@@ -1,0 +1,29 @@
+{
+  "_comment": "Claude Code project settings for job-automation",
+  "_learning": "PostToolUse hooks fire after Claude uses a tool. UserPromptSubmit hooks are NOT used here because they fire on every message regardless of matcher, causing errors. Natural language triggers (run scout, check email) are handled by Claude reading CLAUDE.md and agent files directly.",
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "_comment": "After writing job_tracker.json, check for newly approved jobs ready for prep",
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import json; d=json.load(open('data/job_tracker.json')); ready=[a for a in d['applications'] if a.get('status')=='Approved' and a.get('career_page_url') and not a.get('resume_path')]; print(f'[hook] {len(ready)} job(s) ready for prep' if ready else '[hook] No approved jobs pending prep')\""
+          }
+        ]
+      },
+      {
+        "_comment": "After editing any script or agent/skill/hook file, run quick static integrity check. Silent on pass, loud on failure.",
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/check_workflow.py --quick 2>/dev/null | grep -E '(FAIL|✗)' | sed 's/^/[check_workflow] /' || true"
+          }
+        ]
+      }
+    ]
+  }
+}

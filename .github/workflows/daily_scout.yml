@@ -1,0 +1,79 @@
+name: Daily Job Scout
+
+on:
+  schedule:
+    - cron: '30 6 * * *'   # 12:00 PM IST daily
+  workflow_dispatch:         # manual run from GitHub UI → Actions tab → Run workflow
+
+permissions:
+  contents: write            # allows git push back to the repo
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -q gspread google-auth google-auth-httplib2 python-dotenv
+
+      - name: Create .env
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          YAHOO_EMAIL: ${{ secrets.YAHOO_EMAIL }}
+          YAHOO_APP_PASSWORD: ${{ secrets.YAHOO_APP_PASSWORD }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          printf '%s\n' \
+            "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}" \
+            "APIFY_TOKEN=${APIFY_TOKEN}" \
+            "APIFY_LINKEDIN_ACTOR=bebity/linkedin-jobs-scraper" \
+            "YAHOO_EMAIL=${YAHOO_EMAIL}" \
+            "YAHOO_APP_PASSWORD=${YAHOO_APP_PASSWORD}" \
+            "ADZUNA_APP_ID=${ADZUNA_APP_ID}" \
+            "ADZUNA_APP_KEY=${ADZUNA_APP_KEY}" \
+            "GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}" \
+            "JOB_TRACKER_PATH=data/job_tracker.json" \
+            "OUTPUTS_PATH=outputs/applications" \
+            "MASTER_RESUME_PATH=data/master_resume.pdf" \
+            > .env
+
+      - name: Create Google service account key
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+        run: printf '%s' "${GOOGLE_SA_JSON}" > data/google_service_account.json
+
+      - name: Clear caches
+        run: |
+          mkdir -p data/apify_cache data/adzuna_cache
+          python3 scripts/apify_cache.py clear 2>/dev/null || true
+          rm -f data/adzuna_cache/*.json
+
+      - name: Pull Sheet edits into tracker
+        run: python3 scripts/sheets_sync.py pull
+
+      - name: Run scout pipeline
+        run: |
+          python3 scripts/run_scout.py --market all --source apify --yes
+          python3 scripts/write_tracker.py
+          python3 scripts/sheets_sync.py push
+          python3 scripts/scout_analysis.py
+
+      - name: Commit and push results
+        run: |
+          git config user.email "vinay_patidar02@yahoo.com"
+          git config user.name "vinaypatidar02"
+          git add data/job_tracker.json data/auto_rejected.json data/processed_email_ids.json data/monitoring/
+          git diff --cached --quiet || git commit -m "cron: scout $(date +%Y-%m-%d)"
+          git push

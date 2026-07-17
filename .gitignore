@@ -1,0 +1,14 @@
+# Private state layer — never commit
+data/*
+!data/README.md
+outputs/
+.env
+.env.*
+*.pdf
+data/prep_tmp/
+data/google_service_account.json
+
+# Python
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "apify": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@apify/actors-mcp-server",
+        "--actors",
+        "curious_coder/linkedin-jobs-scraper"
+      ],
+      "env": {
+        "APIFY_TOKEN": "${APIFY_TOKEN}"
+      }
+    },
+    "gmail": {
+      "type": "url",
+      "url": "https://gmailmcp.googleapis.com/mcp/v1",
+      "headers": {
+        "Authorization": "Bearer ${GMAIL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}
