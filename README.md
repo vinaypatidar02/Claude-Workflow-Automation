@@ -71,7 +71,7 @@ This repo is a portfolio snapshot, not a turnkey product: it needs API keys (`.e
 
 Built by **Vinay Patidar** — Lead Analytics professional (8+ years: ecommerce, marketplace, agri-tech) exploring what production-grade AI automation looks like when applied to a real, personal problem.
 
-[LinkedIn](https://www.linkedin.com/in/vinaypatidar02) · vinay_patidar02@yahoo.com
+[LinkedIn](https://www.linkedin.com/in/vinay-patidar-vp02/) · vinay_patidar02@yahoo.com
 
 ## License
 
